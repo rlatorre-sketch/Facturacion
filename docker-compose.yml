@@ -1,0 +1,8 @@
+services:
+  facturacion-svc:
+    build: .
+    image: duoc/caso02-facturacion:1.0.0
+    container_name: caso02-facturacion-svc
+    ports:
+      - "${PORT:-8080}:8080"
+    restart: unless-stopped

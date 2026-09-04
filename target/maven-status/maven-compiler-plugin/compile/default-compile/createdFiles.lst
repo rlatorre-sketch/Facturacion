@@ -1,0 +1,6 @@
+cl\duoc\caso02\facturacion\config\OpenApiConfig.class
+cl\duoc\caso02\facturacion\controller\FacturaController.class
+cl\duoc\caso02\facturacion\FacturaApplication.class
+cl\duoc\caso02\facturacion\service\FacturaService.class
+cl\duoc\caso02\facturacion\model\Factura.class
+cl\duoc\caso02\facturacion\repository\FacturaRepository.class

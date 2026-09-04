@@ -1,0 +1,6 @@
+cl\duoc\caso02\facturacion\FacturaControllerTest.class
+cl\duoc\caso02\facturacion\OpenApiConfigTest.class
+cl\duoc\caso02\facturacion\cucumber\FacturaSteps.class
+cl\duoc\caso02\facturacion\FacturaServiceTest.class
+cl\duoc\caso02\facturacion\cucumber\CucumberRunnerTest.class
+cl\duoc\caso02\facturacion\cucumber\CucumberSpringConfiguration.class
