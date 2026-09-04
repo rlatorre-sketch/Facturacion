@@ -62,3 +62,7 @@ docker compose up --build
 mvn test      # unit tests + Cucumber
 mvn verify    # + verificación de cobertura JaCoCo (100% LINE, falla si baja)
 ```
+## Modelo de ramificacion
+Modelo elegido: Gitflow
+Elegimos Gitflow para continuar con él el semestre completo. Ademas la branch o rama develop
+o desarrollo (Todo en inglés por si acaso) Nos ayudará a trabajar en conjunto sin cometer errores en la rama principal. Conforme avancemos aprenderemos más de ramas, como la rama Hotfix que ayuda a corregir sin interrumpir trabajo en desarrollo. 
