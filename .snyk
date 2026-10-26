@@ -211,38 +211,4 @@ ignore:
         expires: 2027-12-31T23:59:59.000Z
   SNYK-JAVA-COMFASTERXMLJACKSONCORE-17440366:
     - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-COMFASTERXMLJACKSONCORE-17440598:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGAPACHETOMCATEMBED-16691231:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-16191022:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-16200231:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGAPACHETOMCATEMBED-15307781:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGAPACHETOMCATEMBED-17733813:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGAPACHETOMCATEMBED-8523186:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-  SNYK-JAVA-ORGAPACHETOMCATEMBED-8547999:
-    - '*':
-        reason: 'Linea base academica Spring Boot 3.3.5 controlada en entorno aislado'
-        expires: 2027-12-31T23:59:59.000Z
-patch: {}
+        reason: 'Linea base academica Spring Boot 3.3
