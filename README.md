@@ -1,68 +1,26 @@
-# Facturación — Microservicio de riesgo facturacion
+# Microservicio de Facturación (Caso 02 - TalentoYa) — Pipeline CI/CD (EP2 DOY0101)
 
-Microservicio correspondiente al **caso caso02 — TalentoYa** (App de busqueda de empleo (trabajadores/freelance)) de la Evaluación Parcial N°1.
+Repositorio correspondiente a la **Evaluación Parcial N°2** de la asignatura **Ingeniería DevOps (DOY0101)**. Este proyecto implementa un pipeline CI/CD automatizado de punta a punta en **GitHub Actions** para un microservicio desarrollado en **Java 21 con Spring Boot 3.3.5**, integrando contenerización optimizada, pruebas automatizadas, análisis de seguridad con bloqueo (*Security Gate*), despliegue continuo trazable y orquestación de contenedores.
 
-| | |
-|---|---|
-| Stack | Spring Boot 3.3 · Java 25 · Maven · Spring Data JPA · H2 · springdoc-openapi |
-| Calidad | JaCoCo cobertura LINE 100% · Cucumber (BDD) alineado a endpoints REST |
-| Entrega | Docker / Docker Compose |
+---
 
-## Responsabilidad (SRP)
+## 1. Descripción del Microservicio y Ejecución Local
 
-administra los datos y la lógica del dominio de Facturación del caso caso02 (TalentoYa). Su base de datos es una **H2 en memoria** (un solo microservicio por base), cumpliendo aislamiento de datos por dominio.
+El microservicio `facturacion-svc` gestiona la emisión, consulta y cálculo de facturas (incluyendo validación de ítems, cálculo de IVA y persistencia en base de datos en memoria H2), exponiendo una API REST documentada con OpenAPI/Swagger.
 
-## Página de presentación
+### Requisitos previos
+* JDK 21 y Maven 3.9+ (para ejecución directa) o Docker y Docker Compose (para ejecución en contenedores).
 
-Al ejecutar el servicio, `http://localhost:8080/` muestra la página de presentación del microservicio con documentación y enlaces a:
-
-- **Swagger UI**: `/swagger-ui/index.html`
-- **OpenAPI (yaml)**: `/v3/api-docs.yaml`
-- **ReDoc**: `/redoc.html`
-- **H2 Console**: `/h2-console`
-
-## Endpoints
-
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/facturas` | Lista todos los recursos |
-| GET | `/api/facturas/{id}` | Obtiene un recurso por id |
-| POST | `/api/facturas` | Crea un recurso |
-| PUT | `/api/facturas/{id}` | Actualiza un recurso |
-| DELETE | `/api/facturas/{id}` | Elimina un recurso |
-
-## Documentación del proyecto
-
-La documentación completa está en la carpeta [`docs/`](docs/):
-
-- [`docs/00_Resumen.md`](docs/00_Resumen.md) — propósito, responsabilidad y tecnologías
-- [`docs/01_Arquitectura.md`](docs/01_Arquitectura.md) — componentes, arquitectura y patrones
-- [`docs/02_API.md`](docs/02_API.md) — contrato REST y ejemplos curl
-- [`docs/03_Pruebas.md`](docs/03_Pruebas.md) — tests unitarios, cobertura y Cucumber
-- [`docs/04_Despliegue.md`](docs/04_Despliegue.md)
-- [`docs/05_Justificacion.md`](docs/05_Justificacion.md) — justificación del servicio: RF/RNF/seguridad cubiertos, stack y por qué cada tecnología AWS
-- [`docs/diagramas/`](docs/diagramas/) — C4 (contexto, contenedores, componentes), secuencia e infraestructura AWS — Docker, Docker Compose e integración
-
-## Cómo ejecutar locmente
-
+### Comandos de ejecución local
 ```bash
-mvn spring-boot:run
-```
+# Ejecutar pruebas unitarias y validación de cobertura localmente
+mvn clean verify
 
-## Cómo ejecutar con Docker
+# Levantar el entorno orquestado (2 réplicas) con Docker Compose
+docker compose up -d --build
 
-```bash
-docker compose up --build
-# http://localhost:8080
-```
+# Verificar estado de los contenedores y healthchecks
+docker compose ps
 
-## Cómo ejecutar las pruebas
-
-```bash
-mvn test      # unit tests + Cucumber
-mvn verify    # + verificación de cobertura JaCoCo (100% LINE, falla si baja)
-```
-## Modelo de ramificacion
-Modelo elegido: Gitflow
-Elegimos Gitflow para continuar con él el semestre completo. Ademas la branch o rama develop
-o desarrollo (Todo en inglés por si acaso) Nos ayudará a trabajar en conjunto sin cometer errores en la rama principal. Conforme avancemos aprenderemos más de ramas, como la rama Hotfix que ayuda a corregir sin interrumpir trabajo en desarrollo. 
+# Detener el entorno
+docker compose down
