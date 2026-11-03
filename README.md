@@ -102,4 +102,6 @@ Cada vez que el proyecto escala voy encontrando más y mas difícil todo el mund
 En mi cabeza de primer semestre, uno cree que va a salir de acá sabiendo de todo, pero la verdad es que cada uno de estas ramas de la programación son tan densos como si fuera una carrera nueva. Por lo demás, me gustaría señalar que no todo es malo o necesariamente difícil, la importancia que tiene esta rama de la programación para las empresas es clave, entiendo porque son necesarios y lo fundamental que es tener evaluaciones constantes de seguridad.  
 
 ### 👤 Reflexión Individual — Armin Muñoz
-*** FALTA!
+Durante el desarrollo de este trabajo pude conocer distintas herramientas y conceptos relacionados con DevOps que aún no manejo con mucha profundidad. Algunos temas como GitHub, los procesos de CI/CD y las herramientas de análisis de código y seguridad, me resultaron difíciles de comprender, principalmente porque aún no he cursado algunas asignaturas que entregan conocimientos necesarios para entender mejor estos contenidos.
+
+Reconozco que tengo algunas dificultades y que necesito reforzar ciertos conocimientos de programación y otras materias para poder relacionar mejor los conceptos. Aun así, este trabajo me permitió acercarme a herramientas que probablemente serán importantes en mi futuro como desarrollador y comprender, al menos de manera general, cuál es su utilidad dentro de un proyecto de software.
