@@ -1,0 +1,45 @@
+{
+  "title": "EP3 - Observabilidad Microservicio Facturacion (TalentoYa)",
+  "uid": "ep3-facturacion-svc",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Disponibilidad del Servicio (UP)",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "up{service=\"facturacion-svc\"}", "legendFormat": "{{instance}}" }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Uso de CPU del Proceso JVM",
+      "gridPos": { "x": 6, "y": 0, "w": 9, "h": 8 },
+      "targets": [
+        { "expr": "process_cpu_usage{application=\"facturacion-svc\"} * 100", "legendFormat": "CPU %" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Uso de Memoria JVM (Heap / Non-Heap)",
+      "gridPos": { "x": 15, "y": 0, "w": 9, "h": 8 },
+      "targets": [
+        { "expr": "sum(jvm_memory_used_bytes{application=\"facturacion-svc\"}) by (area) / 1024 / 1024", "legendFormat": "{{area}} (MB)" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Errores HTTP (4xx / 5xx) por segundo",
+      "gridPos": { "x": 0, "y": 4, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(rate(http_server_requests_seconds_count{application=\"facturacion-svc\",status=~\"4..|5..\"}[1m])) by (status)", "legendFormat": "HTTP {{status}}" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ep02
+  labels:
+    environment: production-simulated
+    project: talentoya-facturacion

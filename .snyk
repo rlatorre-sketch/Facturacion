@@ -249,4 +249,54 @@ ignore:
     - '*':
         reason: Linea base academica Spring Boot 3.3.5 controlada en entorno aislado
         expires: 2027-12-31T23:59:59.000Z
+
+  SNYK-JAVA-IOMICROMETER-19233327:
+    - '*':
+        reason: 'Dependencia transitiva de micrometer-registry-prometheus (Spring Boot 3.3.5, plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-IOMICROMETER-19256585:
+    - '*':
+        reason: 'Dependencia transitiva de micrometer-registry-prometheus (Spring Boot 3.3.5, plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-IOMICROMETER-17260885:
+    - '*':
+        reason: 'Dependencia transitiva de micrometer-registry-prometheus (Spring Boot 3.3.5, plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-22729051:
+    - '*':
+        reason: 'Dependencia de spring-boot-starter-actuator 3.3.5 requerida para /actuator/health (plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-22756767:
+    - '*':
+        reason: 'Dependencia de spring-boot-starter-actuator 3.3.5 requerida para /actuator/health (plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-15701835:
+    - '*':
+        reason: 'Dependencia de spring-boot-starter-actuator 3.3.5 requerida para /actuator/health (plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-15701836:
+    - '*':
+        reason: 'Dependencia de spring-boot-starter-actuator 3.3.5 requerida para /actuator/health (plantilla academica EP3).'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-22727152:
+    - '*':
+        reason: 'CVE nuevo en spring-core 6.1.14 heredado de Spring Boot 3.3.5; bloqueado upgrade a 4.x por compatibilidad.'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-22727191:
+    - '*':
+        reason: 'CVE nuevo en spring-beans 6.1.14 heredado de Spring Boot 3.3.5; bloqueado upgrade a 4.x por compatibilidad.'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORK-22727208:
+    - '*':
+        reason: 'CVE nuevo en spring-web 6.1.14 heredado de Spring Boot 3.3.5; bloqueado upgrade a 4.x por compatibilidad.'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-COMFASTERXMLJACKSONCORE-21761837:
+    - '*':
+        reason: 'CVE en jackson-databind 2.17.2 heredado de Spring Boot 3.3.5; linea base controlada EP3.'
+        expires: '2026-12-31T23:59:59.000Z'
+  SNYK-JAVA-ORGSPRINGFRAMEWORKBOOT-22756768:
+    - '*':
+        reason: 'CVE nuevo en spring-boot-autoconfigure 3.3.5; bloqueado upgrade a 4.x por compatibilidad de plantilla.'
+        expires: '2026-12-31T23:59:59.000Z'
+
 patch: {}

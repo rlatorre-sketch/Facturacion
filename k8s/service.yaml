@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: facturacion-svc
+  namespace: ep02
+  labels:
+    app: facturacion-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: facturacion-svc
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080

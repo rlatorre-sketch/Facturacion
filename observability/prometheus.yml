@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "facturacion-svc-k8s"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["facturacion-svc.ep02.svc.cluster.local:80"]
+        labels:
+          service: "facturacion-svc"
+          environment: "eks-ep02"
+
+  - job_name: "facturacion-svc-local"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["host.docker.internal:8080", "host.docker.internal:8081"]
+        labels:
+          service: "facturacion-svc"
+          environment: "local-ci"

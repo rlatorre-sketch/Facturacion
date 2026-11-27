@@ -1,0 +1,81 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Disponibilidad del Microservicio (/actuator/health)",
+        "region": "us-east-1",
+        "stat": "Minimum",
+        "period": 60,
+        "metrics": [
+          ["EP02/Observabilidad", "SaludBackend", { "label": "Salud Backend (1=UP, 0=DOWN)" }],
+          ["EP02/Observabilidad", "PodsActivos", { "label": "Pods Ready en Namespace ep02" }]
+        ],
+        "annotations": {
+          "horizontal": [
+            { "label": "Umbral Alarma (< 1)", "value": 1, "color": "#d62728" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Uso de CPU Nodos EKS (Umbral HPA y Alarma 60%)",
+        "region": "us-east-1",
+        "stat": "Average",
+        "period": 60,
+        "metrics": [
+          ["AWS/EC2", "CPUUtilization", { "label": "CPU Promedio Nodo EKS (%)" }]
+        ],
+        "annotations": {
+          "horizontal": [
+            { "label": "Umbral Alarma / HPA (60%)", "value": 60, "color": "#ff7f0e" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Errores HTTP 5XX en Load Balancer (Alarma >= 5/min)",
+        "region": "us-east-1",
+        "stat": "Sum",
+        "period": 60,
+        "metrics": [
+          ["AWS/ELB", "HTTPCode_ELB_5XX", { "label": "Errores 5XX Balanceador" }],
+          ["AWS/ELB", "HTTPCode_Backend_5XX", { "label": "Errores 5XX Microservicio" }]
+        ],
+        "annotations": {
+          "horizontal": [
+            { "label": "Umbral Critico (5)", "value": 5, "color": "#d62728" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "log",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Logs de Errores y Eventos - facturacion-svc",
+        "region": "us-east-1",
+        "query": "SOURCE '/aws/eks/laboratorio-ep02-eks/cluster' | fields @timestamp, @message | filter @message like /facturacion-svc|ERROR|WARN/ | sort @timestamp desc | limit 50"
+      }
+    }
+  ]
+}
