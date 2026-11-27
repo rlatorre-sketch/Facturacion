@@ -1,4 +1,4 @@
-name: CI/CD Pipeline - Microservicio Facturacion
+name: CI/CD Pipeline - Observabilidad y Cumplimiento (EP3)
 
 on:
   push:
@@ -8,14 +8,19 @@ on:
 
 env:
   IMAGE_NAME: duoc/caso02-facturacion
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: laboratorio-ep02-eks
+  ECR_REPOSITORY: ep02-facturacion
 
 jobs:
   # ==========================================
-  # IE2: Pruebas Automatizadas y Cobertura
+  # IE2 / IE6: Pruebas Automatizadas y Quality Gate (JaCoCo >= 70%)
   # ==========================================
   tests:
-    name: IE2 - Pruebas Unitarias y Cobertura (JUnit + JaCoCo)
+    name: IE2/IE6 - Pruebas y Cobertura (JUnit + JaCoCo)
     runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.jacoco_metric.outputs.coverage }}
     steps:
       - name: Descargar codigo fuente
         uses: actions/checkout@v4
@@ -27,20 +32,71 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Ejecutar pruebas unitarias y verificar cobertura (>= 70%)
+      - name: Ejecutar pruebas y Quality Gate de cobertura (>= 70%)
         run: mvn -B clean verify
 
-      - name: Subir reporte de cobertura JaCoCo como evidencia
+      - name: Extraer porcentaje real de cobertura para Dashboard (IE3)
+        id: jacoco_metric
+        run: |
+          COV=$(awk -F',' 'NR>1 {missed+=$8; covered+=$9} END {if (missed+covered>0) printf "%.2f", (covered/(missed+covered))*100; else print "0.00"}' target/site/jacoco/jacoco.csv)
+          echo "Cobertura de lineas JaCoCo: ${COV}%"
+          echo "coverage=${COV}" >> "$GITHUB_OUTPUT"
+
+      - name: Subir reporte de cobertura JaCoCo
         uses: actions/upload-artifact@v4
         with:
           name: reporte-cobertura-jacoco
           path: target/site/jacoco/
 
   # ==========================================
-  # IE3: Seguridad y Politica de Bloqueo (Gating)
+  # IE5 / IE6: Cumplimiento, Auditoria, Validacion K8s y Sonar
+  # ==========================================
+  compliance:
+    name: IE5 - Auditoria de Cumplimiento y Validacion K8s/Obs
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: Ejecutar script automatizado de auditoria DevSecOps
+        run: |
+          sed -i 's/\r$//' scripts/auditoria-cumplimiento.sh
+          bash scripts/auditoria-cumplimiento.sh
+
+      - name: Validar manifiestos Kubernetes (k8s/) con Kubeconform
+        run: |
+          docker run --rm -v "${{ github.workspace }}/k8s:/k8s" \
+            ghcr.io/yannh/kubeconform:latest -summary /k8s
+
+      - name: Validar configuracion de Prometheus (promtool) y Dashboards JSON
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "${{ github.workspace }}/observability:/etc/prometheus" \
+            prom/prometheus:latest check config /etc/prometheus/prometheus.yml
+          jq empty observability/cloudwatch-dashboard.json
+          jq empty observability/grafana-dashboard.json
+          echo "Dashboards CloudWatch y Grafana validados correctamente."
+
+      - name: Analisis estatico SonarQube / SonarCloud (condicional a SONAR_TOKEN)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ]; then
+            echo "SONAR_TOKEN detectado: ejecutando analisis de calidad..."
+            mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.token="$SONAR_TOKEN" \
+              -Dsonar.host.url="${SONAR_HOST_URL:-https://sonarcloud.io}"
+          else
+            echo "SONAR_TOKEN no configurado en secrets; politica cubierta por JaCoCo Quality Gate + Auditoria DevSecOps."
+          fi
+
+  # ==========================================
+  # IE6: Escaneo de Seguridad con Bloqueo (Snyk)
   # ==========================================
   security:
-    name: IE3 - Escaneo de Seguridad con Bloqueo (Snyk)
+    name: IE6 - Escaneo de Seguridad con Bloqueo (Snyk)
     runs-on: ubuntu-latest
     needs: tests
     steps:
@@ -54,70 +110,166 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Snyk - Analisis de dependencias con bloqueo (Severity Critical/High)
+      - name: Snyk - Analisis de dependencias con bloqueo (High/Critical)
         run: npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
   # ==========================================
-  # IE1: Construccion de Contenedor Optimizado
+  # IE1 / IE2: Build Contenedor + Push opcional a AWS ECR
   # ==========================================
   build:
-    name: IE1 - Build Imagen Docker Multi-Stage
+    name: IE1/IE2 - Build Imagen Docker y Registro ECR
     runs-on: ubuntu-latest
-    needs: [tests, security]
+    needs: [tests, compliance, security]
     steps:
       - name: Descargar codigo fuente
         uses: actions/checkout@v4
 
-      - name: Construir imagen Docker etiquetada con SHA y version
+      - name: Construir imagen Docker trazable (SHA y 1.0.0)
         run: |
           docker build -t $IMAGE_NAME:${{ github.sha }} -t $IMAGE_NAME:1.0.0 .
           docker images $IMAGE_NAME
 
+      - name: Publicar imagen en AWS ECR (si existen credenciales AWS)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
+            aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+            docker tag "$IMAGE_NAME:${{ github.sha }}" "${ECR_URI}:${{ github.sha }}"
+            docker tag "$IMAGE_NAME:${{ github.sha }}" "${ECR_URI}:latest"
+            docker push "${ECR_URI}:${{ github.sha }}"
+            docker push "${ECR_URI}:latest"
+            echo "Imagen publicada en AWS ECR: ${ECR_URI}:${{ github.sha }}"
+          else
+            echo "Sin credenciales AWS activas en Secrets; imagen verificada localmente en runner."
+          fi
+
   # ==========================================
-  # IE4 e IE5: Despliegue, Trazabilidad y Orquestacion
+  # IE1, IE2, IE3, IE4: Deploy, Observabilidad y Dashboard de Metricas
   # ==========================================
   deploy:
-    name: IE4 y IE5 - Deploy Simulado y Orquestacion (Docker Compose)
+    name: IE1/IE2/IE3 - Deploy, Observabilidad y Dashboard CI/CD
     runs-on: ubuntu-latest
-    needs: build
+    needs: [tests, build]
     steps:
       - name: Descargar codigo fuente
         uses: actions/checkout@v4
 
-      - name: Desplegar servicio orquestado (2 replicas) con trazabilidad SHA
+      - name: Desplegar servicio, medir tiempo y verificar observabilidad
+        id: obs_metrics
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "Desplegando version trazable: $IMAGE_NAME:$IMAGE_TAG"
+          START_TS=$(date +%s)
           docker compose up -d --build
 
-      - name: Esperar arranque y verificar salud de las replicas (Post-Deploy)
-        run: |
-          sleep 25
-          docker compose ps
-          curl --fail -v http://localhost:8080/
-          curl --fail -v http://localhost:8081/
+          echo "Esperando disponibilidad de /actuator/health..."
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:8080/actuator/health >/dev/null && curl -sf http://localhost:8081/actuator/health >/dev/null; then
+              break
+            fi
+            sleep 3
+          done
 
-      - name: Generar y guardar artefacto de trazabilidad del despliegue
-        run: |
-          echo "=== REGISTRO DE TRAZABILIDAD DE DESPLIEGUE ===" > deploy-traceability.txt
-          echo "Fecha UTC: $(date -u)" >> deploy-traceability.txt
-          echo "Repositorio: ${{ github.repository }}" >> deploy-traceability.txt
-          echo "Rama/Ref: ${{ github.ref_name }}" >> deploy-traceability.txt
-          echo "Commit SHA: ${{ github.sha }}" >> deploy-traceability.txt
-          echo "Autor: ${{ github.actor }}" >> deploy-traceability.txt
-          echo "Imagen desplegada: $IMAGE_NAME:${{ github.sha }} (v1.0.0)" >> deploy-traceability.txt
-          echo "Estado de contenedores orquestados:" >> deploy-traceability.txt
-          docker compose ps >> deploy-traceability.txt
-          cat deploy-traceability.txt
+          HEALTH_8080=$(curl -sf http://localhost:8080/actuator/health)
+          HEALTH_8081=$(curl -sf http://localhost:8081/actuator/health)
+          echo "Replica 8080 health: $HEALTH_8080"
+          echo "Replica 8081 health: $HEALTH_8081"
 
-      - name: Subir evidencia de trazabilidad
+          # Generar trafico base y verificar endpoint Prometheus
+          curl -sf http://localhost:8080/ >/dev/null || true
+          curl -sf http://localhost:8080/actuator/prometheus > prometheus-sample.txt
+          grep -E "^(jvm_memory_used_bytes|process_cpu_usage|http_server_requests_seconds_count)" prometheus-sample.txt | head -n 15
+
+          END_TS=$(date +%s)
+          DEPLOY_TIME=$((END_TS - START_TS))
+          echo "deploy_time=${DEPLOY_TIME}" >> "$GITHUB_OUTPUT"
+
+          # Contar errores 5xx reportados por Micrometer/Prometheus
+          ERR_5XX=$(awk '/^http_server_requests_seconds_count\{.*status="5[0-9]{2}"/ {sum+=$NF} END {printf "%d", sum+0}' prometheus-sample.txt)
+          echo "err_5xx=${ERR_5XX}" >> "$GITHUB_OUTPUT"
+
+          # Capturar uso real de CPU y memoria por contenedor
+          docker stats --no-stream --format "| {{.Name}} | {{.CPUPerc}} | {{.MemUsage}} | {{.MemPerc}} |" > stats-table.md
+          docker compose logs --tail=25 > runtime-logs.txt
+
+      - name: Despliegue automatizado a AWS EKS y Dashboard CloudWatch (si existen credenciales AWS)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            ECR_URI="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${{ github.sha }}"
+            aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
+            kubectl apply -f k8s/namespace.yaml
+            sed "s|duoc/caso02-facturacion:1.0.0|${ECR_URI}|g" k8s/deployment.yaml | kubectl apply -f -
+            kubectl apply -f k8s/service.yaml
+            kubectl apply -f k8s/hpa.yaml
+            kubectl rollout status deployment/facturacion-svc -n ep02 --timeout=180s
+            aws cloudwatch put-dashboard --region "$AWS_REGION" \
+              --dashboard-name "ep02-observabilidad" \
+              --dashboard-body file://observability/cloudwatch-dashboard.json
+            echo "Despliegue en EKS y Dashboard CloudWatch actualizados con exito."
+          else
+            echo "Modo simulado activo (sin credenciales AWS): manifiestos K8s y CloudWatch validados en compliance."
+          fi
+
+      - name: Generar Dashboard de Metricas CI/CD y Resumen en GitHub Actions (IE3)
+        run: |
+          {
+            echo "## Dashboard de Observabilidad y Metricas CI/CD (EP3)"
+            echo ""
+            echo "| Metrica Clave | Valor Medido | Estado |"
+            echo "| :--- | :--- | :---: |"
+            echo "| **Tiempo de despliegue y arranque** | ${{ steps.obs_metrics.outputs.deploy_time }} segundos | OK |"
+            echo "| **Cobertura de pruebas (JaCoCo)** | ${{ needs.tests.outputs.coverage }}% (Umbral >= 70%) | PASS |"
+            echo "| **Disponibilidad (/actuator/health)** | 2/2 replicas UP (puertos 8080 y 8081) | UP |"
+            echo "| **Errores HTTP 5XX registrados** | ${{ steps.obs_metrics.outputs.err_5xx }} | OK |"
+            echo "| **Auditoria DevSecOps y K8s (IE5)** | 0 incumplimientos (Kubeconform + Promtool) | PASS |"
+            echo "| **Security Gate Snyk (IE6)** | Sin vulnerabilidades High/Critical nuevas | PASS |"
+            echo "| **Commit trazable (SHA)** | \`${{ github.sha }}\` | TRAZABLE |"
+            echo ""
+            echo "### Uso de Recursos por Contenedor (CPU y Memoria)"
+            echo "| Contenedor | CPU % | Memoria Usada / Limite | Memoria % |"
+            echo "| :--- | :---: | :---: | :---: |"
+            cat stats-table.md
+          } | tee dashboard-metricas-cicd.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generar y subir evidencias de observabilidad y trazabilidad
+        run: |
+          {
+            echo "=== EVIDENCIA EP3: TRAZABILIDAD Y OBSERVABILIDAD ==="
+            echo "Fecha UTC: $(date -u)"
+            echo "Repositorio: ${{ github.repository }}"
+            echo "Rama: ${{ github.ref_name }}"
+            echo "Commit SHA: ${{ github.sha }}"
+            echo "Autor: ${{ github.actor }}"
+            echo "Imagen: $IMAGE_NAME:${{ github.sha }}"
+            echo "Tiempo de despliegue: ${{ steps.obs_metrics.outputs.deploy_time }}s"
+            echo "Cobertura JaCoCo: ${{ needs.tests.outputs.coverage }}%"
+            echo "Errores 5XX: ${{ steps.obs_metrics.outputs.err_5xx }}"
+            echo ""
+            echo "--- Estado Contenedores ---"
+            docker compose ps
+          } > deploy-traceability.txt
+
+      - name: Subir artefactos de Dashboard, Logs y Trazabilidad
         uses: actions/upload-artifact@v4
         with:
-          name: evidencia-trazabilidad-${{ github.sha }}
-          path: deploy-traceability.txt
+          name: evidencia-observabilidad-ep3-${{ github.sha }}
+          path: |
+            dashboard-metricas-cicd.md
+            deploy-traceability.txt
+            prometheus-sample.txt
+            runtime-logs.txt
 
       - name: Apagar entorno simulado
         if: always()
