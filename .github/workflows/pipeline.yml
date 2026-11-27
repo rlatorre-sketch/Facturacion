@@ -23,7 +23,7 @@ jobs:
       coverage: ${{ steps.jacoco_metric.outputs.coverage }}
     steps:
       - name: Descargar codigo fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar JDK 21
         uses: actions/setup-java@v4
@@ -57,7 +57,7 @@ jobs:
     needs: tests
     steps:
       - name: Descargar codigo fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Ejecutar script automatizado de auditoria DevSecOps
         run: |
@@ -101,7 +101,7 @@ jobs:
     needs: tests
     steps:
       - name: Descargar codigo fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar JDK 21
         uses: actions/setup-java@v4
@@ -124,7 +124,7 @@ jobs:
     needs: [tests, compliance, security]
     steps:
       - name: Descargar codigo fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Construir imagen Docker trazable (SHA y 1.0.0)
         run: |
@@ -159,7 +159,7 @@ jobs:
     needs: [tests, build]
     steps:
       - name: Descargar codigo fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Desplegar servicio, medir tiempo y verificar observabilidad
         id: obs_metrics
